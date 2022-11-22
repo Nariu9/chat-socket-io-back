@@ -2,6 +2,8 @@ import express, {Request, Response} from 'express'
 import http from 'http'
 import {Server, Socket} from 'socket.io'
 
+const port = process.env.PORT || 5000
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -14,6 +16,6 @@ io.on('connection', (socket: Socket) => {
     console.log('a user connected');
 });
 
-server.listen(5000, () => {
-    console.log('listening on *:5000');
+server.listen(port, () => {
+    console.log(`listening on port ${port}`);
 });
