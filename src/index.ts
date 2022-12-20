@@ -1,16 +1,16 @@
 import express, {Request, Response} from 'express'
 import http from 'http'
 import {Server, Socket} from 'socket.io'
-import cors from 'cors'
 
 const port = process.env.PORT || 5000
 
 const app = express();
-app.use(cors({
-    origin: 'http://localhost:3000/'
-}))
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: '*'
+    }
+});
 
 app.get('/', (req: Request, res: Response) => {
     res.send('Hello, it\'s WS server');
