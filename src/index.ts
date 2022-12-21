@@ -16,8 +16,19 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello, it\'s WS server');
 });
 
+const messages = [
+    {id: 'dssadsa', message: 'Hello! How are you?', user: {id: 'dsasdadsa', name: 'Artem'}},
+    {id: 'gfdgfd', message: 'Fine, thanks', user: {id: 'ggggggggg', name: 'Alex'}},
+    {id: 'eeeeee', message: 'Where are you?', user: {id: 'qqqqq', name: 'Hannah'}}
+]
+
 io.on('connection', (socket: Socket) => {
-    console.log('a user connected');
+
+    socket.on('client-message-sent', (message: string) => {
+        console.log(message);
+    });
+
+    socket.emit('init-messages-published', messages)
 });
 
 server.listen(port, () => {
