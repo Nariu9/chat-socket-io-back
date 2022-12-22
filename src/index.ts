@@ -1,7 +1,10 @@
 import express, {Request, Response} from 'express'
 import http from 'http'
 import {Server, Socket} from 'socket.io'
+import crypto from 'crypto'
 
+
+const uuid = () => crypto.randomUUID({disableEntropyCache: true})
 const port = process.env.PORT || 5000
 
 const app = express();
@@ -17,15 +20,17 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 const messages = [
-    {id: 'dssadsa', message: 'Hello! How are you?', user: {id: 'dsasdadsa', name: 'Artem'}},
-    {id: 'gfdgfd', message: 'Fine, thanks', user: {id: 'ggggggggg', name: 'Alex'}},
-    {id: 'eeeeee', message: 'Where are you?', user: {id: 'qqqqq', name: 'Hannah'}}
+    {id: uuid(), message: 'Hello! How are you?', user: {id: uuid(), name: 'Artem'}},
+    {id: uuid(), message: 'Fine, thanks', user: {id: uuid(), name: 'Alex'}},
+    {id: uuid(), message: 'Where are you?', user: {id: uuid(), name: 'Hannah'}}
 ]
 
 io.on('connection', (socket: Socket) => {
 
     socket.on('client-message-sent', (message: string) => {
-        console.log(message);
+        const newMessage = {id: uuid(), message, user: {id: uuid(), name: 'Hannah'}};
+        messages.push(newMessage)
+        io.emit('new-message-sent', newMessage)
     });
 
     socket.emit('init-messages-published', messages)
