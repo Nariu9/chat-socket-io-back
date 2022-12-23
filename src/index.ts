@@ -3,6 +3,16 @@ import http from 'http'
 import {Server, Socket} from 'socket.io'
 import crypto from 'crypto'
 
+type Message = {
+    id: string
+    message: string
+    user: User
+}
+
+type User = {
+    id: string
+    name: string
+}
 
 const uuid = () => crypto.randomUUID({disableEntropyCache: true})
 const port = process.env.PORT || 5000
@@ -19,7 +29,9 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello, it\'s WS server');
 });
 
-const messages = [
+const usersState = new Map()
+
+const messages: Message[] = [
     {id: uuid(), message: 'Hello! How are you?', user: {id: uuid(), name: 'Artem'}},
     {id: uuid(), message: 'Fine, thanks', user: {id: uuid(), name: 'Alex'}},
     {id: uuid(), message: 'Where are you?', user: {id: uuid(), name: 'Hannah'}}
@@ -27,8 +39,25 @@ const messages = [
 
 io.on('connection', (socket: Socket) => {
 
-    socket.on('client-message-sent', (message: string) => {
-        const newMessage = {id: uuid(), message, user: {id: uuid(), name: 'Hannah'}};
+    usersState.set(socket, {id: uuid(), name: 'anonymous'})
+
+    socket.on('client-name-set', (userName: string | unknown) => {
+        if (typeof userName !== 'string') return
+
+        const user: User = usersState.get(socket)
+        user.name = userName
+    })
+
+    socket.on('disconnect', () => {
+        usersState.delete(socket)
+    })
+
+    socket.on('client-message-sent', (message: string | unknown) => {
+        if (typeof message !== 'string') return
+
+        const user: User = usersState.get(socket)
+
+        const newMessage = {id: uuid(), message, user: {id: user.id, name: user.name}};
         messages.push(newMessage)
         io.emit('new-message-sent', newMessage)
     });
