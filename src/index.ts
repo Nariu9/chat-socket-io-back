@@ -39,7 +39,7 @@ const messages: Message[] = [
 
 io.on('connection', (socket: Socket) => {
 
-    usersState.set(socket, {id: uuid(), name: 'anonymous'})
+    usersState.set(socket, {id: uuid(), name: 'Anonymous'})
 
     socket.on('client-name-set', (userName: string | unknown) => {
         if (typeof userName !== 'string') return
@@ -48,18 +48,29 @@ io.on('connection', (socket: Socket) => {
         user.name = userName
     })
 
+    socket.on('client-typing', () => {
+        socket.broadcast.emit('user-typing', usersState.get(socket))
+    })
+
     socket.on('disconnect', () => {
         usersState.delete(socket)
     })
 
-    socket.on('client-message-sent', (message: string | unknown) => {
-        if (typeof message !== 'string') return
+    socket.on('client-message-sent', (message: string | unknown, errorFn) => {
+        if (typeof message !== 'string') {
+            return
+        } else if (message.length > 100) {
+            errorFn('message length must be less than 100 characters')
+            return
+        }
 
         const user: User = usersState.get(socket)
 
         const newMessage = {id: uuid(), message, user: {id: user.id, name: user.name}};
         messages.push(newMessage)
         io.emit('new-message-sent', newMessage)
+
+        errorFn(null)
     });
 
     socket.emit('init-messages-published', messages)
